@@ -51,6 +51,8 @@ unsigned int Year = 0;
 unsigned char TimeTime = 0;
 unsigned char TimeTime2 = 0;
 unsigned char TimeSet[3] = { 0 };
+unsigned char TimeSetCh[3] = { 0 };
+unsigned char SerialFlag = 0;
 
 #define LEN 6
 uint8_t RecBuf[LEN] = { 0 };  // recevie buffer
@@ -224,13 +226,36 @@ void loop()
         uint8_t i = 0;
         delay(10);
         length = Serial.available();
+        if(length == 6)
+        {
+            SerialFlag = 1;
+        }
+        else Serial.print("Error!");
+
         while(length--)
         {
             RecBuf[i++] = Serial.read();
         }
-        TimeSet[0] = (RecBuf[0] - '0') * 10 + RecBuf[1] - '0';
-        TimeSet[1] = (RecBuf[2] - '0') * 10 + RecBuf[3] - '0';
-        TimeSet[2] = (RecBuf[4] - '0') * 10 + RecBuf[5] - '0';
+
+        if(SerialFlag == 1)
+        {
+            SerialFlag = 0;
+            TimeSetCh[0] = (RecBuf[0] - '0') * 10 + RecBuf[1] - '0';
+            TimeSetCh[1] = (RecBuf[2] - '0') * 10 + RecBuf[3] - '0';
+            TimeSetCh[2] = (RecBuf[4] - '0') * 10 + RecBuf[5] - '0';
+
+            if(TimeSetCh[0] <= 23 && TimeSetCh[1] <= 59 && TimeSetCh[2] <= 59)
+            {
+                TimeSet[0] = TimeSetCh[0];
+                TimeSet[1] = TimeSetCh[1];
+                TimeSet[2] = TimeSetCh[2];
+                Serial.print("Success!");
+            }
+            else 
+                Serial.print("Error!");
+
+            TimeSetCh[0] = TimeSetCh[1] = TimeSetCh[2] = 0;
+        }
     }
 
     if (Time[0] == TimeSet[0] && Time[1] == TimeSet[1] && Time[2] == TimeSet[2] && !CFlag)
